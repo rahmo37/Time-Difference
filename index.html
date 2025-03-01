@@ -22,9 +22,11 @@
         height: 100%;
         font-family: "Poppins", sans-serif;
       }
-      /* Dark gradient background for elegance */
+      /* Refined animated gradient background with harmonious dark colors */
       body {
-        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+        background-size: 600% 600%;
+        animation: gradient 15s ease infinite;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -32,10 +34,15 @@
         color: #fff;
         padding: 20px;
       }
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
       /* Analog Clock Container */
       .clock {
         width: 200px;
-        aspect-ratio: 1; /* Ensures the element remains a square */
+        aspect-ratio: 1;
         border: 8px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
         position: relative;
@@ -60,7 +67,6 @@
         font-weight: 600;
         transform: translate(-50%, -50%);
       }
-      /* Position numbers around a 200x200 clock */
       .number12 { top: 12%; left: 50%; }
       .number1  { top: 18%; left: 70%; }
       .number2  { top: 32%; left: 82%; }
@@ -95,9 +101,10 @@
         background: #ffffffac;
       }
       .second-hand {
-        width: 45%;
-        height: 2px;
+        width: 40%;
+        height: 1.5px;
         background: #ff5a5a;
+        margin-top: 3px;
         margin-left: -1px;
       }
       /* Container for the countdown card */
@@ -186,7 +193,6 @@
       @media (max-width: 480px) {
         .clock {
           width: 150px;
-          /* aspect-ratio still applies */
           border-width: 6px;
         }
         .number {
@@ -251,8 +257,7 @@
     </div>
 
     <script>
-      // Analog Clock functionality with correct orientation:
-      // For each hand, we calculate the angle and subtract 90° so that 12 is at the top.
+      // Analog Clock functionality: calculate hand rotation angles so that 12 is at the top.
       const secondHand = document.querySelector(".second-hand");
       const minHand = document.querySelector(".min-hand");
       const hourHand = document.querySelector(".hour-hand");
@@ -264,14 +269,22 @@
         const minutes = now.getMinutes();
         const minutesDegrees = (minutes / 60) * 360 + (seconds / 60) * 6 - 90;
         const hours = now.getHours();
-        const hoursDegrees =
-          ((hours % 12) / 12) * 360 + (minutes / 60) * 30 - 90;
+        const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30 - 90;
         secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
         minHand.style.transform = `rotate(${minutesDegrees}deg)`;
         hourHand.style.transform = `rotate(${hoursDegrees}deg)`;
       }
       setClock();
       setInterval(setClock, 1000);
+
+      // Helper function to format date in "01-Mar-2025" format.
+      function formatDate(date) {
+        const day = ("0" + date.getDate()).slice(-2);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      }
 
       // Countdown Timer functionality
       const timerForm = document.getElementById("timerForm");
@@ -288,15 +301,15 @@
         const targetTime = new Date(inputDateTime);
 
         if (targetTime <= new Date()) {
-          resultDiv.innerHTML =
-            '<span class="error">Please choose a future date and time!</span>';
+          resultDiv.innerHTML = '<span class="error">Please choose a future date and time!</span>';
           targetTimeDiv.style.display = "none";
           return;
         }
 
         targetTimeDiv.style.display = "block";
+        // Format date as "01-Mar-2025" and add a pipe in between date and time.
         targetTimeDiv.textContent =
-          "Countdown ends on: " + targetTime.toLocaleString();
+          "Countdown ends on: " + formatDate(targetTime) + " | " + targetTime.toLocaleTimeString();
 
         countdownInterval = setInterval(() => {
           const now = new Date();
@@ -304,8 +317,7 @@
 
           if (timeDiff <= 0) {
             clearInterval(countdownInterval);
-            resultDiv.innerHTML =
-              "Time is up! Congratulations on reaching your goal!";
+            resultDiv.innerHTML = "Time is up! Congratulations on reaching your goal!";
             return;
           }
 
@@ -319,12 +331,9 @@
 
           let timeLeft = "";
           if (days > 0) timeLeft += days + (days === 1 ? " day " : " days ");
-          if (hours > 0)
-            timeLeft += hours + (hours === 1 ? " hour " : " hours ");
-          if (minutes > 0)
-            timeLeft += minutes + (minutes === 1 ? " min " : " mins ");
-          if (seconds >= 0)
-            timeLeft += seconds + (seconds === 1 ? " sec" : " secs");
+          if (hours > 0) timeLeft += hours + (hours === 1 ? " hour " : " hours ");
+          if (minutes > 0) timeLeft += minutes + (minutes === 1 ? " min " : " mins ");
+          if (seconds >= 0) timeLeft += seconds + (seconds === 1 ? " sec" : " secs");
 
           resultDiv.textContent = timeLeft.trim() + " left";
         }, 1000);
