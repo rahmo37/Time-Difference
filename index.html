@@ -112,8 +112,9 @@
         width: 100%;
         max-width: 500px;
       }
-      /* Glassmorphism card style */
+      /* Glassmorphism card style with relative positioning for button placement */
       .card {
+        position: relative;
         background: rgba(255, 255, 255, 0.15);
         border-radius: 20px;
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -122,6 +123,24 @@
         padding: 2rem;
         text-align: center;
         border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      /* Clear Timer Button - positioned at the top-right corner */
+      #clearTimerButton {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        background: linear-gradient(135deg, #d2a7ff, #619afd);
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        color: #fff;
+        font-weight: bold;
+      }
+      #clearTimerButton:hover {
+        transform: scale(1.05);
       }
       /* Header styling */
       h1 {
@@ -148,8 +167,8 @@
       input[type="datetime-local"]::-webkit-calendar-picker-indicator {
         filter: invert(1);
       }
-      /* Button styling with gradient */
-      button {
+      /* Button styling with gradient for the form */
+      button[type="submit"] {
         width: 100%;
         padding: 0.75rem;
         font-size: 1rem;
@@ -161,7 +180,7 @@
         cursor: pointer;
         transition: transform 0.3s ease;
       }
-      button:hover {
+      button[type="submit"]:hover {
         transform: scale(1.03);
       }
       /* Countdown result text */
@@ -205,7 +224,8 @@
           font-size: 1.5rem;
         }
         input[type="datetime-local"],
-        button {
+        button[type="submit"],
+        #clearTimerButton {
           font-size: 0.9rem;
           padding: 0.6rem;
         }
@@ -243,6 +263,8 @@
 
     <div class="container">
       <div class="card">
+        <!-- Clear Timer button positioned at the top-right corner -->
+        <button id="clearTimerButton">Clear</button>
         <h1>Countdown Timer</h1>
         <form id="timerForm">
           <label for="datetime">Select Future Date &amp; Time:</label>
@@ -261,6 +283,7 @@
       const secondHand = document.querySelector(".second-hand");
       const minHand = document.querySelector(".min-hand");
       const hourHand = document.querySelector(".hour-hand");
+      let countdownInterval;
 
       function setClock() {
         const now = new Date();
@@ -286,31 +309,13 @@
         return `${day}-${month}-${year}`;
       }
 
-      // Countdown Timer functionality
-      const timerForm = document.getElementById("timerForm");
-      const resultDiv = document.getElementById("result");
-      const targetTimeDiv = document.getElementById("targetTime");
-      let countdownInterval;
-
-      timerForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        clearInterval(countdownInterval);
-
-        const inputDateTime = document.getElementById("datetime").value;
-        if (!inputDateTime) return;
-        const targetTime = new Date(inputDateTime);
-
-        if (targetTime <= new Date()) {
-          resultDiv.innerHTML = '<span class="error">Please choose a future date and time!</span>';
-          targetTimeDiv.style.display = "none";
-          return;
-        }
-
+      // Function to start the countdown and store target time in local storage.
+      function startCountdown(targetTime) {
         targetTimeDiv.style.display = "block";
-        // Format date as "01-Mar-2025" and add a pipe in between date and time.
-        targetTimeDiv.textContent =
-          "Countdown ends on: " + formatDate(targetTime) + " | " + targetTime.toLocaleTimeString();
-
+        // Format date as "01-Mar-2025" and add a pipe between date and time.
+        targetTimeDiv.textContent = "Countdown ends on: " + formatDate(targetTime) + " | " + targetTime.toLocaleTimeString();
+        localStorage.setItem("targetTime", targetTime.toISOString());
+        
         countdownInterval = setInterval(() => {
           const now = new Date();
           let timeDiff = targetTime - now;
@@ -318,6 +323,7 @@
           if (timeDiff <= 0) {
             clearInterval(countdownInterval);
             resultDiv.innerHTML = "Time is up! Congratulations on reaching your goal!";
+            localStorage.removeItem("targetTime");
             return;
           }
 
@@ -337,6 +343,51 @@
 
           resultDiv.textContent = timeLeft.trim() + " left";
         }, 1000);
+      }
+
+      // Countdown Timer functionality
+      const timerForm = document.getElementById("timerForm");
+      const resultDiv = document.getElementById("result");
+      const targetTimeDiv = document.getElementById("targetTime");
+      const clearTimerButton = document.getElementById("clearTimerButton");
+
+      timerForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        clearInterval(countdownInterval);
+        resultDiv.textContent = "";
+        const inputDateTime = document.getElementById("datetime").value;
+        if (!inputDateTime) return;
+        const targetTime = new Date(inputDateTime);
+
+        if (targetTime <= new Date()) {
+          resultDiv.innerHTML = '<span class="error">Please choose a future date and time!</span>';
+          targetTimeDiv.style.display = "none";
+          return;
+        }
+
+        startCountdown(targetTime);
+      });
+
+      // Clear Timer button functionality: clears interval and local storage.
+      clearTimerButton.addEventListener("click", function () {
+        clearInterval(countdownInterval);
+        localStorage.removeItem("targetTime");
+        resultDiv.textContent = "";
+        targetTimeDiv.style.display = "none";
+      });
+
+      // On page load, resume countdown if target time is saved in local storage.
+      window.addEventListener("load", function () {
+        const storedTime = localStorage.getItem("targetTime");
+        if (storedTime) {
+          const targetTime = new Date(storedTime);
+          if (targetTime > new Date()) {
+            startCountdown(targetTime);
+            document.getElementById("datetime").value = targetTime.toISOString().slice(0,16);
+          } else {
+            localStorage.removeItem("targetTime");
+          }
+        }
       });
     </script>
   </body>
